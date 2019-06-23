@@ -1,6 +1,7 @@
 package com.server.myapplication.server;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -12,13 +13,9 @@ import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -31,18 +28,22 @@ import java.nio.ByteOrder;
 public class MainActivity extends AppCompatActivity {
 
     ServerSocket serverSocket;
-    Thread Thread1 = null;
+    Thread serverThread = null;
 
     TextView tvIP, tvPort;
     TextView tvMessages;
 
     EditText etMessage;
-    Button btnSend;
+    Button btnSend, btnTrue, btnFalse, btnNeutral;
+
+    boolean connected = false;
 
     public static String SERVER_IP = "";
     public static final int SERVER_PORT = 8070;
 
     String message;
+
+    public static String receivedMessage = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
 
+        btnTrue = findViewById(R.id.btnTrue);
+        btnFalse = findViewById(R.id.btnFalse);
+        btnNeutral = findViewById(R.id.btnNeutral);
+
         try {
             SERVER_IP = getLocalIpAddress();
         } catch (UnknownHostException e) {
@@ -62,8 +67,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         System.out.println("CREATING THREAD 1 FOR CONNECTION!!!");
-        Thread1 = new Thread(new Thread1());
-        Thread1.start();
+        serverThread = new Thread(new ServerThread());
+        serverThread.start();
 
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,7 +76,40 @@ public class MainActivity extends AppCompatActivity {
                 message = etMessage.getText().toString().trim();
                 if (!message.isEmpty()) {
                     System.out.println("STARTING THREAD 3 TO SEND MESSAGES TO THE SERVER");
-                    new Thread(new Thread3(message)).start();
+                    new Thread(new WriteThread(message)).start();
+                }
+            }
+        });
+
+        btnTrue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                message = "1";
+                if (!message.isEmpty()) {
+                    System.out.println("STARTING THREAD 3 TO SEND MESSAGES TO THE SERVER");
+                    new Thread(new WriteThread(message)).start();
+                }
+            }
+        });
+
+        btnFalse.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                message = "0";
+                if (!message.isEmpty()) {
+                    System.out.println("STARTING THREAD 3 TO SEND MESSAGES TO THE SERVER");
+                    new Thread(new WriteThread(message)).start();
+                }
+            }
+        });
+
+        btnNeutral.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                message = "changed";
+                if (!message.isEmpty()) {
+                    System.out.println("STARTING THREAD 3 TO SEND MESSAGES TO THE SERVER");
+                    new Thread(new WriteThread(message)).start();
                 }
             }
         });
@@ -90,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
     private PrintWriter out;
     private BufferedReader in;
 
-    class Thread1 implements Runnable {
+    class ServerThread implements Runnable {
 
         @Override
         public void run() {
@@ -115,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
                             true);
                     in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
+                    connected = true;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -123,7 +162,12 @@ public class MainActivity extends AppCompatActivity {
                     });
 
                     System.out.println("STARTING THREAD 2 FOR READING MESSAGES FROM THE SERVER");
-                    new Thread(new Thread2()).start();
+                    new Thread(new ReadThread()).start();
+
+//                    Intent intent = new Intent(MainActivity.this, AnimationActivity.class);
+//                    intent.putExtra("receivedMessage", receivedMessage); //Optional parameters
+//                    startActivity(intent);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -134,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // thread 2 is for reading
-    private class Thread2 implements Runnable {
+    private class ReadThread implements Runnable {
         @Override
         public void run() {
             System.out.println("THREAD 2 IS RUNNING...");
@@ -149,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (message != null && !message.isEmpty()) {
                         System.out.println("msg is not empty");
+//                        receivedMessage = message;
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -158,8 +203,8 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         System.out.println("message is empty");
                         serverSocket.close();
-                        Thread1 = new Thread(new Thread1());
-                        Thread1.start();
+                        serverThread = new Thread(new ServerThread());
+                        serverThread.start();
                         return;
                     }
                 } catch (IOException e) {
@@ -170,10 +215,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // thread 3 is for writing
-    class Thread3 implements Runnable {
+    class WriteThread implements Runnable {
         private String message;
 
-        Thread3(String message) {
+        WriteThread(String message) {
             this.message = message;
         }
 
