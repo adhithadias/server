@@ -26,29 +26,42 @@
         android:layout_below="@+id/tvPort"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
-    <TextView
-        android:id="@+id/tvMessages"
+    <ScrollView
+        android:id="@+id/tvScroll"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/etMessage"
+        android:layout_height="match_parent"
         android:layout_below="@+id/tvConnectionStatus"
-        android:inputType="textMultiLine"
-        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
+        android:layout_above="@+id/etMessage"
+        android:padding="10dp"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:fillViewport="true">
+
+        <TextView
+            android:id="@+id/tvMessages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/etMessage"
+            android:layout_below="@+id/tvConnectionStatus"
+            android:inputType="textMultiLine"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
+
+    </ScrollView>
 
 
     <EditText
         android:id="@+id/etMessage"
-        android:layout_width="match_parent"
+        android:layout_width="800dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/btnSend"
+        android:layout_alignParentBottom="true"
         android:hint="Enter Message"
         android:inputType="text" />
 
     <Button
         android:id="@+id/btnSend"
-        android:layout_width="match_parent"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="SEND" />
+        android:layout_alignRight="@+id/etMessage"
+        android:text="|>" />
 
 </RelativeLayout>

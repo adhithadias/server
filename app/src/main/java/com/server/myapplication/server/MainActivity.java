@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnSend;
 
     public static String SERVER_IP = "";
-    public static final int SERVER_PORT = 8080;
+    public static final int SERVER_PORT = 8070;
 
     String message;
 
